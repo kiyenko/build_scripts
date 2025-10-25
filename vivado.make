@@ -10,6 +10,7 @@ PROJECT_FILE = project/project.xpr
 XSA_FILE = TOP_wrapper.xsa
 BOOT_FILE = BOOT.bin
 BIT_FILE = project/project.runs/impl_1/TOP_wrapper.bit
+IP_PROJECT_FILE = ip_lib/managed_ip_project/managed_ip_project.xpr
 
 .DEFAULT_GOAL := $(XSA_FILE)
 
@@ -64,6 +65,13 @@ fix:
 .PHONY: upload
 update_boot: $(BOOT_FILE)
 	scp -O $(BOOT_FILE) $(SCP_PATH)
+
+$(IP_PROJECT_FILE):
+	@$(VIVADO) -mode batch -source $(SCRIPTS_DIR)/create_ip_project.tcl
+
+.PHONY: ip
+ip: $(IP_PROJECT_FILE)
+	@$(VIVADO) -mode batch -source $(SCRIPTS_DIR)/open_ip.tcl
 
 .PHONY: clean
 clean :
