@@ -3,7 +3,7 @@ export PROJECT_NAME = $(word 3, $(subst _, ,$(shell basename $(CURDIR))))
 export TOOLS_VER = $(word 4, $(subst _, ,$(shell basename $(CURDIR))))
 
 export LINUX_PROJECT_NAME = petalinux_$(FPGA_ARCH)_$(PROJECT_NAME)_$(TOOLS_VER)
-SCRIPTS_DIR = ../scripts
+SCRIPTS_DIR = ../build_scripts
 VIVADO = LD_PRELOAD=/lib/x86_64-linux-gnu/libudev.so.1 vivado
 BOOTGEN = LD_PRELOAD=/lib/x86_64-linux-gnu/libudev.so.1 bootgen
 PROJECT_FILE = project/project.xpr
