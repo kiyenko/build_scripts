@@ -7,7 +7,7 @@ SCRIPTS_DIR = ../build_scripts
 VIVADO = LD_PRELOAD=/lib/x86_64-linux-gnu/libudev.so.1 vivado
 BOOTGEN = LD_PRELOAD=/lib/x86_64-linux-gnu/libudev.so.1 bootgen
 PROJECT_FILE = project/project.xpr
-XSA_FILE = TOP_wrapper.xsa
+XSA_FILE = project/TOP_wrapper.xsa
 BOOT_FILE = BOOT.bin
 BIT_FILE = project/project.runs/impl_1/TOP_wrapper.bit
 IP_PROJECT_FILE = ip_lib/managed_ip_project/managed_ip_project.xpr
@@ -75,7 +75,7 @@ ip: $(IP_PROJECT_FILE)
 
 .PHONY: clean
 clean :
-	@rm -rf *.log *.jou *.str vivado_pid*.zip .Xil .hbs
+	@rm -rf *.log *.jou *.str vivado_pid*.zip .Xil .hbs *.xsa
 
 .PHONY: clean_all
 clean_all : clean

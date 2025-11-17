@@ -11,11 +11,14 @@ PETL_CFG_DONE = .configdone
 # Vivado paths
 VIVADO_DIR = ../vivado_$(FPGA_ARCH)_$(PROJECT_NAME)_$(TOOLS_VER)
 VIVADO_PROJECT_DIR = $(VIVADO_DIR)/project
-VIVADO_XSA = $(VIVADO_DIR)/TOP_wrapper.xsa
+VIVADO_XSA = $(VIVADO_DIR)/project/TOP_wrapper.xsa
 LINUX_XSA = project-spec/hw-description/system.xsa
 FSBL_FILE = images/linux/zynq_fsbl.elf
 BIT_FILE = project-spec/hw-description/TOP_wrapper.bit
 IMAGE_FILE = images/linux/image.ub
+UBOOT_FILE = images/linux/u-boot.elf
+DEVTREE_FILE = project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi
+BOOT_FILE = BOOT.bin
 
 # For offline PetaLinux builds
 SSTATE_PATH ?= $(shell test -e $(PETL_OFFLINE) && head -n 1 $(PETL_OFFLINE))
@@ -36,7 +39,7 @@ $(PETL_CFG_DONE):
 import: $(LINUX_XSA)
 
 $(LINUX_XSA): $(VIVADO_XSA)
-	petalinux-config --silentconfig --get-hw-description $(VIVADO_DIR)
+	petalinux-config --silentconfig --get-hw-description $(VIVADO_DIR)/project
 	touch $@
 
 .PHONY: petalinux
@@ -45,16 +48,25 @@ petalinux: $(IMAGE_FILE)
 $(IMAGE_FILE): $(PETL_CFG_DONE) $(LINUX_XSA)
 	petalinux-build
 
-BOOT.bin:
+$(BOOT_FILE): $(DEVTREE_FILE) $(BIT_FILE) $(FSBL_FILE) $(UBOOT_FILE)
+	rm -f $@
 	@if [ "$(TOOLS_VER)" = "2020.1" ]; then \
-		petalinux-package --boot --format BIN --fsbl $(FSBL_FILE) --u-boot --fpga $(BIT_FILE) -o $@; \
+		petalinux-package --boot --format BIN --fsbl $(FSBL_FILE) --u-boot --fpga $(BIT_FILE) $(USER_IMG) -o $@; \
 	else \
-		petalinux-package boot --format BIN --fsbl $(FSBL_FILE) --u-boot --fpga $(BIT_FILE) -o $@; \
+		petalinux-package boot --format BIN --fsbl $(FSBL_FILE) --u-boot --fpga $(BIT_FILE) $(USER_IMG) -o $@; \
 	fi
 
 .PHONY: update_image
-update_image:
+update_image: $(IMAGE_FILE)
 	scp -O $(IMAGE_FILE) $(SCP_PATH)
+
+.PHONY: update_boot
+update_boot: $(BOOT_FILE)
+	scp -O $(BOOT_FILE) $(SCP_PATH)
+
+.PHONY: update
+update: $(IMAGE_FILE) $(BOOT_FILE)
+	scp -O $(IMAGE_FILE) $(BOOT_FILE) $(SCP_PATH)
 
 .PHONY: clean
 clean:
