@@ -7,28 +7,37 @@ SCRIPTS_DIR = ../build_scripts
 VIVADO = LD_PRELOAD=/lib/x86_64-linux-gnu/libudev.so.1 vivado
 BOOTGEN = LD_PRELOAD=/lib/x86_64-linux-gnu/libudev.so.1 bootgen
 PROJECT_FILE = project/project.xpr
-XSA_FILE = TOP_wrapper.xsa
+XSA_FILE = project/TOP_wrapper.xsa
 BOOT_FILE = BOOT.bin
 BIT_FILE = project/project.runs/impl_1/TOP_wrapper.bit
+MCS_FILE = project.mcs
 IP_PROJECT_FILE = ip_lib/managed_ip_project/managed_ip_project.xpr
+PROJ_SRC_FILE = project/TOP.tcl
+PROJ_CONSTRAINTS = constraints/*.xdc
 
 .DEFAULT_GOAL := $(XSA_FILE)
 
 .PHONY: create
 create : $(PROJECT_FILE)
 
-$(PROJECT_FILE):
+$(PROJECT_FILE): $(PROJ_SRC_FILE)
 	@$(VIVADO) -mode batch -source $(SCRIPTS_DIR)/create_project.tcl
 
 .PHONY: open
 open : $(PROJECT_FILE)
 	@$(VIVADO) -mode batch -source $(SCRIPTS_DIR)/open_project.tcl
 
-.PHONY: build
-build : $(BIT_FILE)
+.PHONY: bit
+bit : $(BIT_FILE)
 
-$(BIT_FILE): $(PROJECT_FILE)
+$(BIT_FILE): $(PROJECT_FILE) $(PROJ_CONSTRAINTS)
 	@$(VIVADO) -mode batch -source $(SCRIPTS_DIR)/build_project.tcl
+
+.PHONY: mcs
+mcs: $(MCS_FILE)
+
+$(MCS_FILE): $(BIT_FILE)
+	@$(VIVADO) -mode batch -source $(SCRIPTS_DIR)/gen_mcs.tcl
 
 .PHONY: boot
 boot : $(BOOT_FILE)
@@ -48,7 +57,7 @@ $(BOOT_FILE): $(BIT_FILE)
 program: $(BIT_FILE)
 	@$(VIVADO) -mode batch -source $(SCRIPTS_DIR)/program_fpga.tcl
 
-.PHONY: flash
+.PHONY: flash_boot
 flash_boot: $(BOOT_FILE)
 	program_flash -f $(BOOT_FILE) -offset 0 -flash_type qspi_single -fsbl prebuilt/flash_fsbl.elf
 
@@ -75,7 +84,7 @@ ip: $(IP_PROJECT_FILE)
 
 .PHONY: clean
 clean :
-	@rm -rf *.log *.jou *.str vivado_pid*.zip .Xil .hbs
+	@rm -rf *.log *.jou *.str vivado_pid*.zip .Xil .hbs *.xsa
 
 .PHONY: clean_all
 clean_all : clean
