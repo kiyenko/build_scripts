@@ -11,6 +11,7 @@ XSA_FILE = project/TOP_wrapper.xsa
 BOOT_FILE = BOOT.bin
 BIT_FILE = project/project.runs/impl_1/TOP_wrapper.bit
 MCS_FILE = project.mcs
+MCS_ZIP_FILE = mcs.zip
 IP_PROJECT_FILE = ip_lib/managed_ip_project/managed_ip_project.xpr
 PROJ_SRC_FILE = project/TOP.tcl
 PROJ_CONSTRAINTS = constraints/*.xdc
@@ -38,6 +39,7 @@ mcs: $(MCS_FILE)
 
 $(MCS_FILE): $(BIT_FILE)
 	@$(VIVADO) -mode batch -source $(SCRIPTS_DIR)/gen_mcs.tcl
+	zip $(MCS_ZIP_FILE) $(MCS_FILE)
 
 .PHONY: boot
 boot : $(BOOT_FILE)
