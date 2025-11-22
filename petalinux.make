@@ -56,17 +56,17 @@ $(BOOT_FILE): $(DEVTREE_FILE) $(BIT_FILE) $(FSBL_FILE) $(UBOOT_FILE)
 		petalinux-package boot --format BIN --fsbl $(FSBL_FILE) --u-boot --fpga $(BIT_FILE) $(USER_IMG) -o $@; \
 	fi
 
-.PHONY: update_image
-update_image: $(IMAGE_FILE)
-	scp -O $(IMAGE_FILE) $(SCP_PATH)
+.PHONY: upload_image
+upload_image: $(IMAGE_FILE)
+	scp $(SCP_OPTIONS) $(IMAGE_FILE) $(SCP_PATH)
 
-.PHONY: update_boot
-update_boot: $(BOOT_FILE)
-	scp -O $(BOOT_FILE) $(SCP_PATH)
+.PHONY: upload_boot
+upload_boot: $(BOOT_FILE)
+	scp $(SCP_OPTIONS) $(BOOT_FILE) $(SCP_PATH)
 
-.PHONY: update
-update: $(IMAGE_FILE) $(BOOT_FILE)
-	scp -O $(IMAGE_FILE) $(BOOT_FILE) $(SCP_PATH)
+.PHONY: upload
+upload: $(IMAGE_FILE) $(BOOT_FILE)
+	scp $(SCP_OPTIONS) $(IMAGE_FILE) $(BOOT_FILE) $(SCP_PATH)
 
 .PHONY: clean
 clean:
