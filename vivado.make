@@ -51,10 +51,13 @@ $(BOOT_FILE): $(BIT_FILE)
 	@echo "  [bootloader]../$(LINUX_PROJECT_NAME)/images/linux/zynq_fsbl.elf" >> linux.bif
 	@echo "  $(BIT_FILE)" >> linux.bif
 	@echo "  ../$(LINUX_PROJECT_NAME)/images/linux/u-boot.elf" >> linux.bif
-	@echo $(EXTRA_BIF_PART) >> linux.bif
+	@echo "  $(EXTRA_BIF_PART)" >> linux.bif
 	@echo "}" >> linux.bif
 	@$(BOOTGEN) -arch zynq -image linux.bif -o $@ -w
-	@rm -f linux.bif
+
+.PHONY: upload
+upload: $(BOOT_FILE)
+	scp $(SCP_OPTIONS) $(BOOT_FILE) $(SCP_PATH)
 
 .PHONY: program
 program: $(BIT_FILE)
@@ -72,7 +75,7 @@ $(XSA_FILE) : $(BIT_FILE)
 
 .PHONY: fix
 fix:
-	sudo cp prebuilt/zynq_qspi_x4_single.bin /opt/Xilinx/$(XILINX_SDK_TOOL)/$(TOOLS_VER)/data/xicom/cfgmem/uboot/
+	sudo cp ../resources/zynq_qspi_x4_single.bin /opt/Xilinx/$(XILINX_SDK_TOOL)/$(TOOLS_VER)/data/xicom/cfgmem/uboot/
 
 .PHONY: upload
 update_boot: $(BOOT_FILE)
@@ -92,4 +95,5 @@ clean :
 .PHONY: clean_all
 clean_all : clean
 	@rm -rf project/project.*
+	@rm -rf project/*.log
 
