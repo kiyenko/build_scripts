@@ -14,7 +14,8 @@ MCS_FILE = project.mcs
 IP_PROJECT_FILE = ip_lib/managed_ip_project/managed_ip_project.xpr
 PROJ_SRC_FILE = project/TOP.tcl
 PROJ_CONSTRAINTS = constraints/*.xdc
-DATE_TIME = $(shell date "+%Y%m%d-%H%M")
+#DATE_TIME = $(shell date "+%Y%m%d-%H%M")
+DATE_TIME = $(shell cat ts.txt || date "+%g%m%d%H")
 MCS_ZIP_FILE = $(PROJECT_NAME)_$(DATE_TIME).zip
 
 .DEFAULT_GOAL := $(XSA_FILE)
