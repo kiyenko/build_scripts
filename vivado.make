@@ -28,7 +28,7 @@ $(PROJECT_FILE): $(PROJ_SRC_FILE)
 
 .PHONY: open
 open : $(PROJECT_FILE)
-	@$(VIVADO) -mode batch -source $(SCRIPTS_DIR)/open_project.tcl
+	@$(VIVADO) -mode batch -source $(SCRIPTS_DIR)/open_project.tcl &
 
 .PHONY: bit
 bit : $(BIT_FILE)
