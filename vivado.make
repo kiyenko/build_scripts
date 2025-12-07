@@ -14,9 +14,10 @@ MCS_FILE = project.mcs
 IP_PROJECT_FILE = ip_lib/managed_ip_project/managed_ip_project.xpr
 PROJ_SRC_FILE = project/TOP.tcl
 PROJ_CONSTRAINTS = constraints/*.xdc
-#DATE_TIME = $(shell date "+%Y%m%d-%H%M")
 DATE_TIME = $(shell cat ts.txt || date "+%g%m%d%H")
 MCS_ZIP_FILE = $(PROJECT_NAME)_$(DATE_TIME).zip
+txtylw = '\e[0;33m'
+txtrst = '\e[0m'
 
 .DEFAULT_GOAL := $(XSA_FILE)
 
@@ -40,6 +41,7 @@ $(BIT_FILE): $(PROJECT_FILE) $(PROJ_CONSTRAINTS)
 mcs: $(MCS_FILE)
 
 $(MCS_FILE): $(BIT_FILE)
+	@echo -e "$(txtylw)Generate MCS$(txtrst)"
 	@$(VIVADO) -mode batch -source $(SCRIPTS_DIR)/gen_mcs.tcl
 	zip $(MCS_ZIP_FILE) $(MCS_FILE)
 
