@@ -103,7 +103,7 @@ $(IP_PROJECT_FILE):
 .PHONY: ip
 ip: $(IP_PROJECT_FILE)
 	@echo -e "$(txtylw)Opening IP project$(txtrst)"
-	@$(VIVADO) -mode batch -source $(SCRIPTS_DIR)/open_ip.tcl
+	@$(VIVADO) -mode batch -source $(SCRIPTS_DIR)/open_ip.tcl &
 
 .PHONY: clean
 clean :
