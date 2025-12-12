@@ -20,6 +20,8 @@ UBOOT_FILE = images/linux/u-boot.elf
 DEVTREE_FILE = project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi
 BOOT_FILE = BOOT.bin
 SCR_FILE = images/linux/boot.scr
+DATE_TIME = $(shell date "+%g%m%d%H")
+RELEASE_ZIP_FILE = $(PROJECT_NAME)_$(DATE_TIME).zip
 
 # For offline PetaLinux builds
 SSTATE_PATH ?= $(shell test -e $(PETL_OFFLINE) && head -n 1 $(PETL_OFFLINE))
@@ -68,6 +70,10 @@ upload_boot: $(BOOT_FILE)
 .PHONY: upload
 upload: $(IMAGE_FILE) $(BOOT_FILE) $(SCR_FILE)
 	scp $(SCP_OPTIONS) $(IMAGE_FILE) $(BOOT_FILE) $(SCR_FILE) $(SCP_PATH)
+
+.PHONY: release
+release: $(IMAGE_FILE) $(BOOT_FILE) $(SCR_FILE)
+	zip $(RELEASE_ZIP_FILE) $(IMAGE_FILE) $(BOOT_FILE) $(SCR_FILE)
 
 .PHONY: clean
 clean:
