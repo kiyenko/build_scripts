@@ -21,6 +21,10 @@ DEVTREE_FILE = project-spec/meta-user/recipes-bsp/device-tree/files/system-user.
 BOOT_FILE = BOOT.bin
 SCR_FILE = images/linux/boot.scr
 
+# Colors
+txtylw = \e[0;33m
+txtrst = \e[0m
+
 # For offline PetaLinux builds
 SSTATE_PATH ?= $(shell test -e $(PETL_OFFLINE) && head -n 1 $(PETL_OFFLINE))
 ifneq ($(SSTATE_PATH),)
@@ -40,6 +44,7 @@ $(PETL_CFG_DONE):
 import: $(LINUX_XSA)
 
 $(LINUX_XSA): $(VIVADO_XSA)
+	@echo -e "$(txtylw)Import HW Description$(txtrst)"
 	petalinux-config --silentconfig --get-hw-description $(VIVADO_DIR)/project
 	touch $@
 
@@ -47,9 +52,11 @@ $(LINUX_XSA): $(VIVADO_XSA)
 petalinux: $(IMAGE_FILE)
 
 $(IMAGE_FILE): $(PETL_CFG_DONE) $(LINUX_XSA)
+	@echo -e "$(txtylw)Build project$(txtrst)"
 	petalinux-build
 
 $(BOOT_FILE): $(DEVTREE_FILE) $(BIT_FILE) $(FSBL_FILE) $(UBOOT_FILE)
+	@echo -e "$(txtylw)Generate BOOT.bin$(txtrst)"
 	rm -f $@
 	@if [ "$(TOOLS_VER)" = "2020.1" ]; then \
 		petalinux-package --boot --format BIN --fsbl $(FSBL_FILE) --u-boot --fpga $(BIT_FILE) $(USER_IMG) -o $@; \
@@ -59,17 +66,21 @@ $(BOOT_FILE): $(DEVTREE_FILE) $(BIT_FILE) $(FSBL_FILE) $(UBOOT_FILE)
 
 .PHONY: upload_image
 upload_image: $(IMAGE_FILE)
+	@echo -e "$(txtylw)Upload image.ub$(txtrst)"
 	scp $(SCP_OPTIONS) $(IMAGE_FILE) $(SCP_PATH)
 
 .PHONY: upload_boot
 upload_boot: $(BOOT_FILE)
+	@echo -e "$(txtylw)Upload BOOT.bin$(txtrst)"
 	scp $(SCP_OPTIONS) $(BOOT_FILE) $(SCP_PATH)
 
 .PHONY: upload
 upload: $(IMAGE_FILE) $(BOOT_FILE) $(SCR_FILE)
+	@echo -e "$(txtylw)Upload files$(txtrst)"
 	scp $(SCP_OPTIONS) $(IMAGE_FILE) $(BOOT_FILE) $(SCR_FILE) $(SCP_PATH)
 
 .PHONY: clean
 clean:
+	@echo -e "$(txtylw)Clean project$(txtrst)"
 	petalinux-build -x mrproper
 	rm -f $(PETL_CFG_DONE)
