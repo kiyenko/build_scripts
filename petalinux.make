@@ -83,6 +83,7 @@ upload: $(IMAGE_FILE) $(BOOT_FILE) $(SCR_FILE)
 
 .PHONY: release
 release: $(IMAGE_FILE) $(BOOT_FILE) $(SCR_FILE)
+	@echo -e "$(txtylw)Create $(RELEASE_ZIP_FILE) release file$(txtrst)"
 	zip $(RELEASE_ZIP_FILE) $(IMAGE_FILE) $(BOOT_FILE) $(SCR_FILE)
 
 .PHONY: clean
