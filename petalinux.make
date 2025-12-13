@@ -25,6 +25,7 @@ RELEASE_ZIP_FILE = $(PROJECT_NAME)_$(DATE_TIME).zip
 
 # Colors
 txtylw = \e[0;33m
+txtblu = \e[0;34m
 txtrst = \e[0m
 
 # For offline PetaLinux builds
@@ -83,8 +84,11 @@ upload: $(IMAGE_FILE) $(BOOT_FILE) $(SCR_FILE)
 
 .PHONY: release
 release: $(IMAGE_FILE) $(BOOT_FILE) $(SCR_FILE)
-	@echo -e "$(txtylw)Create $(RELEASE_ZIP_FILE) release file$(txtrst)"
-	zip $(RELEASE_ZIP_FILE) $(IMAGE_FILE) $(BOOT_FILE) $(SCR_FILE)
+	@echo -e "$(txtylw)Create $(txtblu)$(RELEASE_ZIP_FILE) $(txtylw)release file$(txtrst)"
+	cp $(IMAGE_FILE) ./
+	cp $(SCR_FILE) ./
+	zip $(RELEASE_ZIP_FILE) image.ub $(BOOT_FILE) boot.scr
+	rm -f image.ub boot.scr
 
 .PHONY: clean
 clean:
