@@ -5,6 +5,7 @@ export TOOLS_VER = $(word 4, $(subst _, ,$(shell basename $(CURDIR))))
 export LINUX_PROJECT_NAME = petalinux_$(FPGA_ARCH)_$(PROJECT_NAME)_$(TOOLS_VER)
 SCRIPTS_DIR = ../build_scripts
 VIVADO = LD_PRELOAD=/lib/x86_64-linux-gnu/libudev.so.1 vivado
+VITIS = LD_PRELOAD=/lib/x86_64-linux-gnu/libudev.so.1 vitis
 BOOTGEN = LD_PRELOAD=/lib/x86_64-linux-gnu/libudev.so.1 bootgen
 PROJECT_FILE = project/project.xpr
 XSA_FILE = project/TOP_wrapper.xsa
@@ -104,6 +105,11 @@ $(IP_PROJECT_FILE):
 ip: $(IP_PROJECT_FILE)
 	@echo -e "$(txtylw)Opening IP project$(txtrst)"
 	@$(VIVADO) -mode batch -source $(SCRIPTS_DIR)/open_ip.tcl &
+
+.PHONY: vitis
+vitis:
+	@echo -e "$(txtylw)Runnign Vitis$(txtrst)"
+	@$(VITIS)
 
 .PHONY: clean
 clean :
