@@ -50,6 +50,11 @@ $(MCS_FILE): $(BIT_FILE)
 	@$(VIVADO) -mode batch -source $(SCRIPTS_DIR)/gen_mcs.tcl
 	zip $(MCS_ZIP_FILE) $(MCS_FILE)
 
+.PHONY: flash_mcs
+flash_mcs: $(MCS_FILE)
+	@echo -e "$(txtylw)Programm MCS$(txtrst)"
+	@$(VIVADO) -mode batch -source $(SCRIPTS_DIR)/flash_mcs.tcl
+
 .PHONY: boot
 boot : $(BOOT_FILE)
 

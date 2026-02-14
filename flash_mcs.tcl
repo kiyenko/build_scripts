@@ -6,7 +6,7 @@ open_hw_target
 current_hw_device   [ get_hw_devices $env(FPGA_DEV)_0 ]
 set hw_device       [ lindex [get_hw_devices $env(FPGA_DEV)_0] 0 ]
 refresh_hw_device   -update_hw_probes false $hw_device
-create_hw_cfgmem    -hw_device $hw_device [ lindex [get_cfgmem_parts {is25lp064a-spi-x1_x2_x4}] 0 ]
+create_hw_cfgmem    -hw_device $hw_device [ lindex [get_cfgmem_parts $env(CFGMEM_PART)] 0 ]
 set cfg_mem         [ get_property PROGRAM.HW_CFGMEM $hw_device ]
 
 set_property PROGRAM.BLANK_CHECK            0                     $cfg_mem
