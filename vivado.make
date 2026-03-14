@@ -11,7 +11,7 @@ IP_DIR               ?= ip_lib
 TOP_BD               ?= TOP
 
 # Project files
-ifneq ($(TOOLS_VER),2020.1)
+ifeq ($(TOOLS_VER),2020.1)
 SRC_TOP_FILE         ?= $(PROJECT_DIR)/$(PROJECT_NAME).srcs/sources_1/bd/$(TOP_BD)/hdl/$(TOP_BD)_wrapper.vhd
 else
 SRC_TOP_FILE         ?= $(PROJECT_DIR)/$(PROJECT_NAME).gen/sources_1/bd/$(TOP_BD)/hdl/$(TOP_BD)_wrapper.vhd
@@ -20,6 +20,7 @@ BIT_FILE             ?= $(PROJECT_DIR)/$(PROJECT_NAME).runs/impl_1/$(TOP_BD)_wra
 BD_TCL_FILE          ?= $(PROJECT_DIR)/$(TOP_BD).tcl
 BD_FILE              ?= $(PROJECT_DIR)/$(PROJECT_NAME).srcs/sources_1/bd/$(TOP_BD)/$(TOP_BD).bd
 PROJECT_FILE         ?= $(PROJECT_DIR)/$(PROJECT_NAME).xpr
+XSA_FILE             ?= $(PROJECT_DIR)/$(TOP_BD)_wrapper.xsa
 USER_CREATE_TCL_FILE ?= user_create.tcl
 USER_BUILD_TCL_FILE  ?= user_build.tcl
 IP_PROJECT_FILE       = $(IP_DIR)/managed_ip_project/managed_ip_project.xpr
@@ -154,8 +155,8 @@ flash_boot: $(BOOT_FILE)
 	@echo -e "$(txtylw)Program Flash$(txtrst)"
 	program_flash -f $(BOOT_FILE) -offset 0 -flash_type qspi_single -fsbl prebuilt/flash_fsbl.elf
 
-.PHONY: export
-export : $(XSA_FILE)
+.PHONY: xsa
+xsa : $(XSA_FILE)
 
 $(XSA_FILE) : $(BIT_FILE)
 	@echo -e "$(txtylw)Export project$(txtrst)"
