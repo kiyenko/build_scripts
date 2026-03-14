@@ -1,27 +1,27 @@
 # This Makefile can be used to build the PetaLinux projects.
-FPGA_ARCH = $(word 2, $(subst _, ,$(shell basename $(CURDIR))))
-PROJECT_NAME = $(word 3, $(subst _, ,$(shell basename $(CURDIR))))
-TOOLS_VER = $(word 4, $(subst _, ,$(shell basename $(CURDIR))))
+FPGA_ARCH          ?= $(word 2, $(subst _, ,$(shell basename $(CURDIR))))
+PROJECT_NAME       ?= $(word 3, $(subst _, ,$(shell basename $(CURDIR))))
+TOOLS_VER          ?= $(word 4, $(subst _, ,$(shell basename $(CURDIR))))
 
 # defaults
-.DEFAULT_GOAL := petalinux
-PETL_OFFLINE = .offline
-PETL_CFG_DONE = .configdone
+.DEFAULT_GOAL      := petalinux
+PETL_OFFLINE        = .offline
+PETL_CFG_DONE       = .configdone
 
 # Vivado paths
-VIVADO_DIR = ../vivado_$(FPGA_ARCH)_$(PROJECT_NAME)_$(TOOLS_VER)
-VIVADO_PROJECT_DIR = $(VIVADO_DIR)/project
-VIVADO_XSA = $(VIVADO_DIR)/project/TOP_wrapper.xsa
-LINUX_XSA = project-spec/hw-description/system.xsa
-FSBL_FILE = images/linux/zynq_fsbl.elf
-BIT_FILE = project-spec/hw-description/TOP_wrapper.bit
-IMAGE_FILE = images/linux/image.ub
-UBOOT_FILE = images/linux/u-boot.elf
-DEVTREE_FILE = project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi
-BOOT_FILE = BOOT.bin
-SCR_FILE = images/linux/boot.scr
-DATE_TIME = $(shell date "+%g%m%d%H")
-RELEASE_ZIP_FILE = $(PROJECT_NAME)_$(DATE_TIME).zip
+VIVADO_DIR         ?= ../vivado_$(FPGA_ARCH)_$(PROJECT_NAME)_$(TOOLS_VER)
+VIVADO_PROJECT_DIR  = $(VIVADO_DIR)/project
+VIVADO_XSA         ?= $(VIVADO_DIR)/project/TOP_wrapper.xsa
+LINUX_XSA           = project-spec/hw-description/system.xsa
+FSBL_FILE           = images/linux/zynq_fsbl.elf
+BIT_FILE            = project-spec/hw-description/TOP_wrapper.bit
+IMAGE_FILE          = images/linux/image.ub
+UBOOT_FILE          = images/linux/u-boot.elf
+DEVTREE_FILE        = project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dtsi
+BOOT_FILE           = BOOT.bin
+SCR_FILE            = images/linux/boot.scr
+DATE_TIME           = $(shell date "+%g%m%d%H")
+RELEASE_ZIP_FILE    = $(PROJECT_NAME)_$(DATE_TIME).zip
 
 # Colors
 txtylw = \e[0;33m
@@ -43,8 +43,8 @@ $(PETL_CFG_DONE):
 	fi
 	touch $@
 
-.PHONY: import
-import: $(LINUX_XSA)
+.PHONY: import_xsa
+import_xsa: $(LINUX_XSA)
 
 $(LINUX_XSA): $(VIVADO_XSA)
 	@echo -e "$(txtylw)Import HW Description$(txtrst)"
@@ -95,3 +95,10 @@ clean:
 	@echo -e "$(txtylw)Clean project$(txtrst)"
 	petalinux-build -x mrproper
 	rm -f $(PETL_CFG_DONE)
+
+.PHONY: clean_all
+clean_all: clean
+	@echo -e "$(txtylw)Complete clean$(txtrst)"
+	rm -rf project-spec/hw-description
+	rm -rf build
+
