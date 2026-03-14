@@ -1,17 +1,21 @@
 # Globals
-PROJECT_NAME    ?= project
+PROJECT_NAME         ?= project
 
 # Project folders
-PROJECT_DIR     ?= project
-CONSTRAINTS_DIR ?= constraints
-SCRIPTS_DIR     ?= build_scripts
-IP_DIR          ?= ip_lib
+PROJECT_DIR          ?= project
+CONSTRAINTS_DIR      ?= constraints
+SCRIPTS_DIR          ?= build_scripts
+IP_DIR               ?= ip_lib
 
 # Name of top-level blockdesign
-TOP_BD ?= TOP
+TOP_BD               ?= TOP
 
 # Project files
+ifneq ($(TOOLS_VER),2020.1)
+SRC_TOP_FILE         ?= $(PROJECT_DIR)/$(PROJECT_NAME).srcs/sources_1/bd/$(TOP_BD)/hdl/$(TOP_BD)_wrapper.vhd
+else
 SRC_TOP_FILE         ?= $(PROJECT_DIR)/$(PROJECT_NAME).gen/sources_1/bd/$(TOP_BD)/hdl/$(TOP_BD)_wrapper.vhd
+endif
 BIT_FILE             ?= $(PROJECT_DIR)/$(PROJECT_NAME).runs/impl_1/$(TOP_BD)_wrapper.bit
 BD_TCL_FILE          ?= $(PROJECT_DIR)/$(TOP_BD).tcl
 BD_FILE              ?= $(PROJECT_DIR)/$(PROJECT_NAME).srcs/sources_1/bd/$(TOP_BD)/$(TOP_BD).bd
@@ -68,7 +72,7 @@ export JOBS
 .PHONY: build
 build : $(BIT_FILE)
 
-$(BIT_FILE): $(PROJECT_FILE) $(SRC_TOP_FILE)
+$(BIT_FILE): $(SRC_TOP_FILE)
 ifneq (, $(wildcard $(USER_BUILD_TCLFILE)))
 	@echo -e "$(txtylw)Apply USER build script$(txtrst)"
 	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(USER_BUILD_TCL_FILE)
@@ -79,7 +83,7 @@ endif
 .PHONY: create
 create: $(SRC_TOP_FILE)
 
-$(SRC_TOP_FILE):
+$(SRC_TOP_FILE): $(PROJECT_FILE)
 	@echo -e "$(txtylw)Generate TOP level wrapper$(txtrst)"
 	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/create_top_wrapper.tcl
 
