@@ -12,7 +12,8 @@ PETL_CFG_DONE       = .configdone
 VIVADO_DIR         ?= ../vivado_$(FPGA_ARCH)_$(PROJECT_NAME)_$(TOOLS_VER)
 VIVADO_PROJECT_DIR  = $(VIVADO_DIR)/project
 VIVADO_XSA         ?= $(VIVADO_DIR)/project/TOP_wrapper.xsa
-LINUX_XSA           = project-spec/hw-description/system.xsa
+HW_DESC_DIR			= project-spec/hw-description
+LINUX_XSA           = $(HW_DESC_DIR)/system.xsa
 FSBL_FILE           = images/linux/zynq_fsbl.elf
 BIT_FILE            = project-spec/hw-description/TOP_wrapper.bit
 IMAGE_FILE          = images/linux/image.ub
@@ -42,6 +43,7 @@ $(PETL_CFG_DONE):
 		echo 'Configuring project for offline build ($(SSTATE_PATH))'; \
 	fi
 	touch $@
+	mkdir -p $(HW_DESC_DIR)
 
 .PHONY: import_xsa
 import_xsa: $(LINUX_XSA)
@@ -99,6 +101,6 @@ clean:
 .PHONY: clean_all
 clean_all: clean
 	@echo -e "$(txtylw)Complete clean$(txtrst)"
-	rm -rf project-spec/hw-description
+	rm -rf project-spec/hw-description/*
 	rm -rf build
 
