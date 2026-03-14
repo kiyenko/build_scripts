@@ -29,6 +29,11 @@ txtylw = \e[0;33m
 txtblu = \e[0;34m
 txtrst = \e[0m
 
+### If VERBOSE is set, the commands are not hidden.
+ifeq ($(VERBOSE),)
+V=@
+endif
+
 # For offline PetaLinux builds
 SSTATE_PATH ?= $(shell test -e $(PETL_OFFLINE) && head -n 1 $(PETL_OFFLINE))
 ifneq ($(SSTATE_PATH),)
@@ -42,65 +47,65 @@ $(PETL_CFG_DONE):
 		echo '$(SSTATE_FEEDS)' >> ./project-spec/configs/config; \
 		echo 'Configuring project for offline build ($(SSTATE_PATH))'; \
 	fi
-	touch $@
-	mkdir -p $(HW_DESC_DIR)
+	$(V) touch $@
+	$(V) mkdir -p $(HW_DESC_DIR)
 
-.PHONY: import_xsa
-import_xsa: $(LINUX_XSA)
+.PHONY: import
+import: $(LINUX_XSA)
 
 $(LINUX_XSA): $(VIVADO_XSA)
 	@echo -e "$(txtylw)Import HW Description$(txtrst)"
-	petalinux-config --silentconfig --get-hw-description $(VIVADO_DIR)/project
-	touch $@
+	$(V) petalinux-config --silentconfig --get-hw-description $(VIVADO_DIR)/project
+	$(V) touch $@
 
 .PHONY: petalinux
 petalinux: $(IMAGE_FILE)
 
 $(IMAGE_FILE): $(PETL_CFG_DONE) $(LINUX_XSA)
 	@echo -e "$(txtylw)Build project$(txtrst)"
-	petalinux-build
+	$(V) petalinux-build
 
 $(BOOT_FILE): $(DEVTREE_FILE) $(BIT_FILE) $(FSBL_FILE) $(UBOOT_FILE)
 	@echo -e "$(txtylw)Generate BOOT.bin$(txtrst)"
 	rm -f $@
 	@if [ "$(TOOLS_VER)" = "2020.1" ]; then \
-		petalinux-package --boot --format BIN --fsbl $(FSBL_FILE) --u-boot --fpga $(BIT_FILE) $(USER_IMG) -o $@; \
+		$(V) petalinux-package --boot --format BIN --fsbl $(FSBL_FILE) --u-boot --fpga $(BIT_FILE) $(USER_IMG) -o $@; \
 	else \
-		petalinux-package boot --format BIN --fsbl $(FSBL_FILE) --u-boot --fpga $(BIT_FILE) $(USER_IMG) -o $@; \
+		$(V) petalinux-package boot --format BIN --fsbl $(FSBL_FILE) --u-boot --fpga $(BIT_FILE) $(USER_IMG) -o $@; \
 	fi
 
 .PHONY: upload_image
 upload_image: $(IMAGE_FILE)
 	@echo -e "$(txtylw)Upload image.ub$(txtrst)"
-	scp $(SCP_OPTIONS) $(IMAGE_FILE) $(SCP_PATH)
+	$(V) scp $(SCP_OPTIONS) $(IMAGE_FILE) $(SCP_PATH)
 
 .PHONY: upload_boot
 upload_boot: $(BOOT_FILE)
 	@echo -e "$(txtylw)Upload BOOT.bin$(txtrst)"
-	scp $(SCP_OPTIONS) $(BOOT_FILE) $(SCP_PATH)
+	$(V) scp $(SCP_OPTIONS) $(BOOT_FILE) $(SCP_PATH)
 
 .PHONY: upload
 upload: $(IMAGE_FILE) $(BOOT_FILE) $(SCR_FILE)
 	@echo -e "$(txtylw)Upload files$(txtrst)"
-	scp $(SCP_OPTIONS) $(IMAGE_FILE) $(BOOT_FILE) $(SCR_FILE) $(SCP_PATH)
+	$(V) scp $(SCP_OPTIONS) $(IMAGE_FILE) $(BOOT_FILE) $(SCR_FILE) $(SCP_PATH)
 
 .PHONY: release
 release: $(IMAGE_FILE) $(BOOT_FILE) $(SCR_FILE)
 	@echo -e "$(txtylw)Create $(txtblu)$(RELEASE_ZIP_FILE) $(txtylw)release file$(txtrst)"
-	cp $(IMAGE_FILE) ./
-	cp $(SCR_FILE) ./
-	zip $(RELEASE_ZIP_FILE) image.ub $(BOOT_FILE) boot.scr
-	rm -f image.ub boot.scr
+	$(V) cp $(IMAGE_FILE) ./
+	$(V) cp $(SCR_FILE) ./
+	$(V) zip $(RELEASE_ZIP_FILE) image.ub $(BOOT_FILE) boot.scr
+	$(V) rm -f image.ub boot.scr
 
 .PHONY: clean
 clean:
 	@echo -e "$(txtylw)Clean project$(txtrst)"
-	petalinux-build -x mrproper
-	rm -f $(PETL_CFG_DONE)
+	$(V) petalinux-build -x mrproper
+	$(V) rm -f $(PETL_CFG_DONE)
 
 .PHONY: clean_all
 clean_all: clean
 	@echo -e "$(txtylw)Complete clean$(txtrst)"
-	rm -rf project-spec/hw-description/*
-	rm -rf build
+	$(V) rm -rf project-spec/hw-description/*
+	$(V) rm -rf build
 
