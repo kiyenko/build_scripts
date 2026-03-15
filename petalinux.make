@@ -68,10 +68,10 @@ $(IMAGE_FILE): $(PETL_CFG_DONE) $(LINUX_XSA)
 $(BOOT_FILE): $(DEVTREE_FILE) $(BIT_FILE) $(FSBL_FILE) $(UBOOT_FILE)
 	@echo -e "$(txtylw)Generate BOOT.bin$(txtrst)"
 	rm -f $@
-	@if [ "$(TOOLS_VER)" = "2020.1" ]; then \
-		$(V) petalinux-package --boot --format BIN --fsbl $(FSBL_FILE) --u-boot --fpga $(BIT_FILE) $(USER_IMG) -o $@; \
+	if [ "$(TOOLS_VER)" = "2020.1" ]; then \
+		petalinux-package --boot --format BIN --fsbl $(FSBL_FILE) --u-boot --fpga $(BIT_FILE) $(USER_IMG) -o $@; \
 	else \
-		$(V) petalinux-package boot --format BIN --fsbl $(FSBL_FILE) --u-boot --fpga $(BIT_FILE) $(USER_IMG) -o $@; \
+		petalinux-package boot --format BIN --fsbl $(FSBL_FILE) --u-boot --fpga $(BIT_FILE) $(USER_IMG) -o $@; \
 	fi
 
 .PHONY: upload_image
