@@ -100,7 +100,7 @@ ifneq (, $(wildcard $(USER_CREATE_TCLFILE)))
 endif
 
 .PHONY: open
-open : $(PROJECT_FILE) $(SRC_TOP_FILE)
+open : $(SRC_TOP_FILE)
 	@echo -e "$(txtylw)Open project$(txtrst)"
 	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/open_project.tcl &
 
