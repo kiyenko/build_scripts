@@ -17,6 +17,7 @@ else
 SRC_TOP_FILE         ?= $(PROJECT_DIR)/$(PROJECT_NAME).gen/sources_1/bd/$(TOP_BD)/hdl/$(TOP_BD)_wrapper.vhd
 endif
 BIT_FILE             ?= $(PROJECT_DIR)/$(PROJECT_NAME).runs/impl_1/$(TOP_BD)_wrapper.bit
+BIN_FILE             ?= $(PROJECT_DIR)/$(PROJECT_NAME).runs/impl_1/$(TOP_BD)_wrapper.bit.bin
 BD_TCL_FILE          ?= $(PROJECT_DIR)/$(TOP_BD).tcl
 BD_FILE              ?= $(PROJECT_DIR)/$(PROJECT_NAME).srcs/sources_1/bd/$(TOP_BD)/$(TOP_BD).bd
 PROJECT_FILE         ?= $(PROJECT_DIR)/$(PROJECT_NAME).xpr
@@ -161,6 +162,18 @@ xsa : $(XSA_FILE)
 $(XSA_FILE) : $(BIT_FILE)
 	@echo -e "$(txtylw)Export project$(txtrst)"
 	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/export_hw.tcl
+
+
+.PHONY: bin
+bin : $(BIN_FILE)
+
+$(BIN_FILE) : $(BIT_FILE)
+	@echo "all:" > convert.bif
+	@echo "{" >> convert.bif
+	@echo "  $(BIT_FILE)" >> convert.bif
+	@echo "}" >> convert.bif
+	$(V) $(BOOTGEN) -image convert.bif -arch zynq -process_bitstream bin -w
+	@rm -f convert.bif
 
 .PHONY: fix
 fix:
