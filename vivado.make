@@ -25,7 +25,7 @@ XSA_FILE             ?= $(PROJECT_DIR)/$(TOP_BD)_wrapper.xsa
 USER_CREATE_TCL_FILE ?= user_create.tcl
 USER_BUILD_TCL_FILE  ?= user_build.tcl
 IP_PROJECT_FILE       = $(IP_DIR)/managed_ip_project/managed_ip_project.xpr
-MCS_FILE             ?= project.mcs
+MCS_FILE             ?= $(PROJECT_NAME).mcs
 
 # Tools
 VIVADO  = vivado
@@ -65,6 +65,7 @@ export BD_FILE
 export USER_CREATE_TCL_FILE
 export USER_BUILD_TCL_FILE
 export SRC_TOP_FILE
+export XSA_FILE
 
 export JOBS
 
@@ -191,4 +192,5 @@ clean :
 
 .PHONY: clean_all
 clean_all : clean
+	$(V) rm -rf $(PROJECT_DIR)/project.*
 	$(V) rm -rf $(PROJECT_DIR)/$(PROJECT_NAME).*
