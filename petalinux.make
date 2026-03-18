@@ -94,7 +94,7 @@ release: $(IMAGE_FILE) $(BOOT_FILE) $(SCR_FILE)
 	@echo -e "$(txtylw)Create $(txtblu)$(RELEASE_ZIP_FILE) $(txtylw)release file$(txtrst)"
 	$(V) cp $(IMAGE_FILE) ./
 	$(V) cp $(SCR_FILE) ./
-	$(V) zip $(RELEASE_ZIP_FILE) image.ub $(BOOT_FILE) boot.scr
+	$(V) zip $(RELEASE_ZIP_FILE) image.ub $(BOOT_FILE) boot.scr $(RELEASE_ADD)
 	$(V) rm -f image.ub boot.scr
 
 .PHONY: clean
