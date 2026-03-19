@@ -26,6 +26,8 @@ USER_CREATE_TCL_FILE ?= user_create.tcl
 USER_BUILD_TCL_FILE  ?= user_build.tcl
 IP_PROJECT_FILE       = $(IP_DIR)/managed_ip_project/managed_ip_project.xpr
 MCS_FILE             ?= $(PROJECT_NAME).mcs
+BIT_ELF_FILE         ?= $(PROJECT_NAME).bit
+MMI_FILE             ?= $(PROJECT_DIR)/$(PROJECT_NAME).runs/impl_1/$(TOP_BD)_wrapper.mmi
 
 # Tools
 VIVADO  = vivado
@@ -175,6 +177,13 @@ $(BIN_FILE) : $(BIT_FILE)
 	@echo "}" >> convert.bif
 	$(V) $(BOOTGEN) -image convert.bif -arch zynq -process_bitstream bin -w
 	@rm -f convert.bif
+
+.PHONY: bit_elf
+bit_elf: $(BIT_ELF_FILE)
+
+$(BIT_ELF_FILE): $(BIT_FILE) $(ELF_FILE)
+	@echo -e "$(txtylw)Update BIT with ELF software$(txtrst)"
+	updatemem -meminfo $(MMI_FILE) -data $(ELF_FILE) -bit $(BIT_FILE) -proc $(PROC) -out $@ -force
 
 .PHONY: fix
 fix:
