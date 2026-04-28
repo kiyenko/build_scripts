@@ -1,5 +1,7 @@
 # Globals
-PROJECT_NAME         ?= project
+export FPGA_ARCH     ?= $(word 2, $(subst _, ,$(shell basename $(CURDIR))))
+export PROJECT_NAME  ?= $(word 3, $(subst _, ,$(shell basename $(CURDIR))))
+export TOOLS_VER     ?= $(word 4, $(subst _, ,$(shell basename $(CURDIR))))
 
 # Project folders
 PROJECT_DIR          ?= project
@@ -26,6 +28,10 @@ USER_CREATE_TCL_FILE ?= user_create.tcl
 USER_BUILD_TCL_FILE  ?= user_build.tcl
 IP_PROJECT_FILE       = $(IP_DIR)/managed_ip_project/managed_ip_project.xpr
 MCS_FILE             ?= $(PROJECT_NAME).mcs
+BIT_ELF_FILE         ?= $(PROJECT_NAME).bit
+MMI_FILE             ?= $(PROJECT_DIR)/$(PROJECT_NAME).runs/impl_1/$(TOP_BD)_wrapper.mmi
+DATE_TIME             = $(shell cat ts.txt || date "+%g%m%d%H")
+MCS_ZIP_FILE         ?= $(PROJECT_NAME)_$(DATE_TIME).zip
 
 # Tools
 VIVADO  = vivado
@@ -75,7 +81,7 @@ export JOBS
 .PHONY: build
 build : $(BIT_FILE)
 
-$(BIT_FILE): $(SRC_TOP_FILE)
+$(BIT_FILE): $(PROJECT_FILE)
 ifneq (, $(wildcard $(USER_BUILD_TCLFILE)))
 	@echo -e "$(txtylw)Apply USER build script$(txtrst)"
 	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(USER_BUILD_TCL_FILE)
@@ -84,7 +90,7 @@ endif
 	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/build_project.tcl
 
 .PHONY: create
-create: $(SRC_TOP_FILE)
+create: $(PROJECT_FILE)
 
 $(SRC_TOP_FILE): $(PROJECT_FILE)
 	@echo -e "$(txtylw)Generate TOP level wrapper$(txtrst)"
@@ -95,13 +101,15 @@ $(PROJECT_FILE): $(BD_TCL_FILE)
 	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/create_project.tcl
 	@echo -e "$(txtylw)Add project constraints$(txtrst)"
 	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/add_constraints.tcl
+	@echo -e "$(txtylw)Generate TOP level wrapper$(txtrst)"
+	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/create_top_wrapper.tcl
 ifneq (, $(wildcard $(USER_CREATE_TCLFILE)))
 	@echo -e "$(txtylw)Apply USER create script$(txtrst)"
 	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(USER_CREATE_TCL_FILE)
 endif
 
 .PHONY: open
-open : $(SRC_TOP_FILE)
+open : $(PROJECT_FILE)
 	@echo -e "$(txtylw)Open project$(txtrst)"
 	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/open_project.tcl &
 
@@ -164,7 +172,6 @@ $(XSA_FILE) : $(BIT_FILE)
 	@echo -e "$(txtylw)Export project$(txtrst)"
 	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/export_hw.tcl
 
-
 .PHONY: bin
 bin : $(BIN_FILE)
 
@@ -175,6 +182,13 @@ $(BIN_FILE) : $(BIT_FILE)
 	@echo "}" >> convert.bif
 	$(V) $(BOOTGEN) -image convert.bif -arch zynq -process_bitstream bin -w
 	@rm -f convert.bif
+
+.PHONY: bit_elf
+bit_elf: $(BIT_ELF_FILE)
+
+$(BIT_ELF_FILE): $(BIT_FILE) $(ELF_FILE)
+	@echo -e "$(txtylw)Update BIT with ELF software$(txtrst)"
+	updatemem -meminfo $(MMI_FILE) -data $(ELF_FILE) -bit $(BIT_FILE) -proc $(PROC) -out $@ -force
 
 .PHONY: fix
 fix:
