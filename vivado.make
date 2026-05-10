@@ -30,13 +30,15 @@ IP_PROJECT_FILE       = $(IP_DIR)/managed_ip_project/managed_ip_project.xpr
 MCS_FILE             ?= $(PROJECT_NAME).mcs
 BIT_ELF_FILE         ?= $(PROJECT_NAME).bit
 MMI_FILE             ?= $(PROJECT_DIR)/$(PROJECT_NAME).runs/impl_1/$(TOP_BD)_wrapper.mmi
+TS_FILE               = ts.txt
 DATE_TIME             = $(shell cat ts.txt || date "+%g%m%d%H")
+MCS_BIT_FILE         ?= $(BIT_FILE)
 MCS_ZIP_FILE         ?= $(PROJECT_NAME)_$(DATE_TIME).zip
 
 # Tools
-VIVADO  = vivado
-VITIS   = vitis
-BOOTGEN = bootgen
+VIVADO                = vivado
+VITIS                 = vitis
+BOOTGEN               = bootgen
 
 ### Number of parallel jobs. ncores/2 by default
 JOBS?=$(shell echo $$(($$(nproc)/2)))
@@ -72,6 +74,8 @@ export USER_CREATE_TCL_FILE
 export USER_BUILD_TCL_FILE
 export SRC_TOP_FILE
 export XSA_FILE
+export MCS_FILE
+export MCS_BIT_FILE
 
 export JOBS
 
@@ -87,22 +91,27 @@ ifneq (, $(wildcard $(USER_BUILD_TCLFILE)))
 	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(USER_BUILD_TCL_FILE)
 endif
 	@echo -e "$(txtylw)Build project$(txtrst)"
-	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/build_project.tcl
+	$(V) $(PREFIX) $(VIVADO) -mode batch \
+	   	-source $(SCRIPTS_DIR)/build_project.tcl
 
 .PHONY: create
 create: $(PROJECT_FILE)
 
 $(SRC_TOP_FILE): $(PROJECT_FILE)
 	@echo -e "$(txtylw)Generate TOP level wrapper$(txtrst)"
-	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/create_top_wrapper.tcl
+	$(V) $(PREFIX) $(VIVADO) -mode batch \
+	   	-source $(SCRIPTS_DIR)/create_top_wrapper.tcl
 
 $(PROJECT_FILE): $(BD_TCL_FILE)
 	@echo -e "$(txtylw)Create project from TCL$(txtrst)"
-	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/create_project.tcl
+	$(V) $(PREFIX) $(VIVADO) -mode batch \
+	   	-source $(SCRIPTS_DIR)/create_project.tcl
 	@echo -e "$(txtylw)Add project constraints$(txtrst)"
-	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/add_constraints.tcl
+	$(V) $(PREFIX) $(VIVADO) -mode batch \
+	   	-source $(SCRIPTS_DIR)/add_constraints.tcl
 	@echo -e "$(txtylw)Generate TOP level wrapper$(txtrst)"
-	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/create_top_wrapper.tcl
+	$(V) $(PREFIX) $(VIVADO) -mode batch \
+	   	-source $(SCRIPTS_DIR)/create_top_wrapper.tcl
 ifneq (, $(wildcard $(USER_CREATE_TCLFILE)))
 	@echo -e "$(txtylw)Apply USER create script$(txtrst)"
 	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(USER_CREATE_TCL_FILE)
@@ -111,11 +120,13 @@ endif
 .PHONY: open
 open : $(PROJECT_FILE)
 	@echo -e "$(txtylw)Open project$(txtrst)"
-	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/open_project.tcl &
+	$(V) $(PREFIX) $(VIVADO) -mode batch\
+	   	-source $(SCRIPTS_DIR)/open_project.tcl &
 
 $(IP_PROJECT_FILE):
 	@echo -e "$(txtylw)Creating IP project$(txtrst)"
-	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/create_ip_project.tcl
+	$(V) $(PREFIX) $(VIVADO) -mode batch\
+	   	-source $(SCRIPTS_DIR)/create_ip_project.tcl
 
 .PHONY: ip
 ip: $(IP_PROJECT_FILE)
@@ -125,7 +136,7 @@ ip: $(IP_PROJECT_FILE)
 .PHONY: mcs
 mcs: $(MCS_FILE)
 
-$(MCS_FILE): $(BIT_FILE)
+$(MCS_FILE): $(BIT_ELF_FILE)
 	@echo -e "$(txtylw)Generate MCS$(txtrst)"
 	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/gen_mcs.tcl
 	$(V) zip $(MCS_ZIP_FILE) $(MCS_FILE)
@@ -163,7 +174,8 @@ program: $(BIT_FILE)
 .PHONY: flash_boot
 flash_boot: $(BOOT_FILE)
 	@echo -e "$(txtylw)Program Flash$(txtrst)"
-	program_flash -f $(BOOT_FILE) -offset 0 -flash_type qspi_single -fsbl prebuilt/flash_fsbl.elf
+	program_flash -f $(BOOT_FILE) -offset 0 -flash_type qspi_single \
+	   	-fsbl prebuilt/flash_fsbl.elf
 
 .PHONY: xsa
 xsa : $(XSA_FILE)
@@ -188,12 +200,17 @@ bit_elf: $(BIT_ELF_FILE)
 
 $(BIT_ELF_FILE): $(BIT_FILE) $(ELF_FILE)
 	@echo -e "$(txtylw)Update BIT with ELF software$(txtrst)"
-	updatemem -meminfo $(MMI_FILE) -data $(ELF_FILE) -bit $(BIT_FILE) -proc $(PROC) -out $@ -force
+	updatemem -meminfo $(MMI_FILE) \
+		-data $(ELF_FILE) \
+	   	-bit $(BIT_FILE) \
+	   	-proc $(PROC) \
+	   	-out $@ -force
 
 .PHONY: fix
 fix:
 	@echo -e "$(txtylw)Fix Flash U-Boot$(txtrst)"
-	sudo cp ../resources/zynq_qspi_x4_single.bin /opt/Xilinx/$(XILINX_SDK_TOOL)/$(TOOLS_VER)/data/xicom/cfgmem/uboot/
+	sudo cp ../resources/zynq_qspi_x4_single.bin \
+	   	/opt/Xilinx/$(XILINX_SDK_TOOL)/$(TOOLS_VER)/data/xicom/cfgmem/uboot/
 
 .PHONY: upload
 update_boot: $(BOOT_FILE)
@@ -202,9 +219,17 @@ update_boot: $(BOOT_FILE)
 
 .PHONY: clean
 clean :
-	$(V) rm -rf *.log *.jou *.str vivado_pid*.zip .Xil .hbs
+	$(V) rm -rf *.log *.jou *.str vivado_pid*.zip .Xil .hbs *.mcs *.prm *.bit \
+	*.bin *.xsa $(TS_FILE)
 
 .PHONY: clean_all
 clean_all : clean
-	$(V) rm -rf $(PROJECT_DIR)/project.*
-	$(V) rm -rf $(PROJECT_DIR)/$(PROJECT_NAME).*
+	$(V) rm -rf $(PROJECT_DIR)/$(PROJECT_NAME).cache \
+		$(PROJECT_DIR)/$(PROJECT_NAME).gen \
+		$(PROJECT_DIR)/$(PROJECT_NAME).hw \
+		$(PROJECT_DIR)/$(PROJECT_NAME).ip_user_files \
+		$(PROJECT_DIR)/$(PROJECT_NAME).runs \
+		$(PROJECT_DIR)/$(PROJECT_NAME).srcs \
+		$(PROJECT_FILE) $(XSA_FILE) $(PROJECT_DIR)/*.bit \
+		$(PROJECT_DIR)/*.mmi $(PROJECT_DIR)/.Xil $(PROJECT_DIR)/*.log
+
