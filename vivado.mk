@@ -19,7 +19,7 @@ TOP_BD               ?= TOP
 ################################################################################
 # Project files
 ################################################################################
-PROJECTS_DIRS         = $(PROJECT_DIR)/$(PROJECT_NAME)
+PROJECT_DIRS          = $(PROJECT_DIR)/$(PROJECT_NAME)
 ifeq ($(TOOLS_VER),2020.1)
 SRC_TOP_FILE         ?= $(PROJECT_DIRS).srcs/sources_1/bd/$(TOP_BD)/hdl/$(TOP_BD)_wrapper.vhd
 else
@@ -37,6 +37,7 @@ IP_PROJECT_FILE       = $(IP_DIR)/managed_ip_project/managed_ip_project.xpr
 MCS_FILE             ?= $(PROJECT_NAME).mcs
 BIT_ELF_FILE         ?= $(PROJECT_NAME).bit
 BIN_FILE             ?= $(PROJECT_NAME).bin
+HDF_FILE             ?= $(PROJECT_NAME).hdf
 MMI_FILE             ?= $(PROJECT_DIRS).runs/impl_1/$(TOP_BD)_wrapper.mmi
 TS_FILE               = ts.txt
 DATE_TIME             = $(shell cat ts.txt || date "+%g%m%d%H")
@@ -177,8 +178,19 @@ $(BOOT_FILE): $(BIT_FILE)
 .PHONY: xsa
 xsa : $(XSA_FILE)
 $(XSA_FILE) : $(BIT_FILE)
-	@echo -e "$(txtylw)Export project$(txtrst)"
+	@echo -e "$(txtylw)Export XSA$(txtrst)"
 	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/export_hw.tcl
+
+.PHONY: hdf
+hdf : $(HDF_FILE)
+$(HDF_FILE): $(BIT_FILE)
+	@echo -e "$(txtylw)Export HDF$(txtrst)"
+	@mkdir -p $(PROJECT_DIRS).sdk
+	@cp -f $(PROJECT_DIRS).runs/impl_1/$(TOP_BD)_wrapper.sysdef $@
+
+.PHONY: sdk
+sdk: $(HDF_FILE)
+	launch_sdk -workspace $(PROJECT_DIRS).sdk -hwspec $(HDF_FILE)
 
 ################################################################################
 # MCS
