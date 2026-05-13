@@ -229,14 +229,14 @@ update_boot: $(BOOT_FILE)
 
 .PHONY: program
 program: $(BIT_FILE)
-    @echo -e "$(txtylw)Program FPGA$(txtrst)"
-    $(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/program_fpga.tcl
+	@echo -e "$(txtylw)Program FPGA$(txtrst)"
+	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/program_fpga.tcl
 
 .PHONY: flash_boot
 flash_boot: $(BOOT_FILE)
-    @echo -e "$(txtylw)Program Flash$(txtrst)"
-    program_flash -f $(BOOT_FILE) -offset 0 -flash_type qspi_single \
-        -fsbl prebuilt/flash_fsbl.elf
+	@echo -e "$(txtylw)Program Flash$(txtrst)"
+	program_flash -f $(BOOT_FILE) -offset 0 -flash_type qspi_single \
+		-fsbl prebuilt/flash_fsbl.elf
 
 ################################################################################
 # Clean
