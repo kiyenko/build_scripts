@@ -1,4 +1,6 @@
+################################################################################
 # Globals
+################################################################################
 export FPGA_ARCH     ?= $(word 2, $(subst _, ,$(shell basename $(CURDIR))))
 export PROJECT_NAME  ?= $(word 3, $(subst _, ,$(shell basename $(CURDIR))))
 export TOOLS_VER     ?= $(word 4, $(subst _, ,$(shell basename $(CURDIR))))
@@ -17,14 +19,14 @@ TOP_BD               ?= TOP
 ################################################################################
 # Project files
 ################################################################################
-PROJECTS_DIRS         = $(PROJECT_DIR)/$(PROJECT_NAME)
+PROJECT_DIRS          = $(PROJECT_DIR)/$(PROJECT_NAME)
 ifeq ($(TOOLS_VER),2020.1)
 SRC_TOP_FILE         ?= $(PROJECT_DIRS).srcs/sources_1/bd/$(TOP_BD)/hdl/$(TOP_BD)_wrapper.vhd
 else
 SRC_TOP_FILE         ?= $(PROJECT_DIRS).gen/sources_1/bd/$(TOP_BD)/hdl/$(TOP_BD)_wrapper.vhd
 endif
 BIT_FILE             ?= $(PROJECT_DIRS).runs/impl_1/$(TOP_BD)_wrapper.bit
-BIN_FILE             ?= $(PROJECT_DIRS).runs/impl_1/$(TOP_BD)_wrapper.bit.bin
+BIT_BIN_FILE         ?= $(PROJECT_DIRS).runs/impl_1/$(TOP_BD)_wrapper.bit.bin
 BD_TCL_FILE          ?= $(PROJECT_DIR)/$(TOP_BD).tcl
 BD_FILE              ?= $(PROJECT_DIRS).srcs/sources_1/bd/$(TOP_BD)/$(TOP_BD).bd
 PROJECT_FILE         ?= $(PROJECT_DIR)/$(PROJECT_NAME).xpr
@@ -34,6 +36,8 @@ USER_BUILD_TCL_FILE  ?= user_build.tcl
 IP_PROJECT_FILE       = $(IP_DIR)/managed_ip_project/managed_ip_project.xpr
 MCS_FILE             ?= $(PROJECT_NAME).mcs
 BIT_ELF_FILE         ?= $(PROJECT_NAME).bit
+BIN_FILE             ?= $(PROJECT_NAME).bin
+HDF_FILE             ?= $(PROJECT_NAME).hdf
 MMI_FILE             ?= $(PROJECT_DIRS).runs/impl_1/$(TOP_BD)_wrapper.mmi
 TS_FILE               = ts.txt
 DATE_TIME             = $(shell cat ts.txt || date "+%g%m%d%H")
@@ -97,7 +101,6 @@ export JOBS
 ################################################################################
 .PHONY: build
 build : $(BIT_FILE)
-
 $(BIT_FILE): $(PROJECT_FILE) $(CONSTRAINTS)
 ifneq (, $(wildcard $(USER_BUILD_TCLFILE)))
 	@echo -e "$(txtylw)Apply USER build script$(txtrst)"
@@ -153,27 +156,10 @@ ip: $(IP_PROJECT_FILE)
 	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/open_ip.tcl &
 
 ################################################################################
-# MCS
-################################################################################
-.PHONY: mcs
-mcs: $(MCS_FILE)
-
-$(MCS_FILE): $(BIT_ELF_FILE)
-	@echo -e "$(txtylw)Generate MCS$(txtrst)"
-	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/gen_mcs.tcl
-	$(V) zip $(MCS_ZIP_FILE) $(MCS_FILE)
-
-.PHONY: flash_mcs
-flash_mcs: $(MCS_FILE)
-	@echo -e "$(txtylw)Programm MCS$(txtrst)"
-	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/flash_mcs.tcl
-
-################################################################################
 # BOOT.bin
 ################################################################################
 .PHONY: boot
 boot : $(BOOT_FILE)
-
 $(BOOT_FILE): $(BIT_FILE)
 	@echo -e "$(txtylw)Generate BIF$(txtrst)"
 	@echo "the_ROM_image:" > linux.bif
@@ -191,16 +177,45 @@ $(BOOT_FILE): $(BIT_FILE)
 ################################################################################
 .PHONY: xsa
 xsa : $(XSA_FILE)
-
 $(XSA_FILE) : $(BIT_FILE)
-	@echo -e "$(txtylw)Export project$(txtrst)"
+	@echo -e "$(txtylw)Export XSA$(txtrst)"
 	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/export_hw.tcl
 
+.PHONY: hdf
+hdf : $(HDF_FILE)
+$(HDF_FILE): $(BIT_FILE)
+	@echo -e "$(txtylw)Export HDF$(txtrst)"
+	@mkdir -p $(PROJECT_DIRS).sdk
+	@cp -f $(PROJECT_DIRS).runs/impl_1/$(TOP_BD)_wrapper.sysdef $@
+
+.PHONY: sdk
+sdk: $(HDF_FILE)
+	launch_sdk -workspace $(PROJECT_DIRS).sdk -hwspec $(HDF_FILE)
+
+################################################################################
+# MCS
+################################################################################
+.PHONY: mcs
+mcs: $(MCS_FILE)
+$(MCS_FILE): $(BIT_ELF_FILE)
+	@echo -e "$(txtylw)Generate MCS$(txtrst)"
+	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/gen_mcs.tcl
+	$(V) zip $(MCS_ZIP_FILE) $(MCS_FILE)
+
+.PHONY: flash_mcs
+flash_mcs: $(MCS_FILE)
+	@echo -e "$(txtylw)Programm MCS$(txtrst)"
+	$(V) $(PREFIX) $(VIVADO) -mode batch -source $(SCRIPTS_DIR)/flash_mcs.tcl
 
 .PHONY: bin
-bin : $(BIN_FILE)
+bin: $(BIN_FILE)
+$(BIN_FILE): $(BIT_ELF_FILE)
+	@echo -e "$(txtylw)Generate BIN$(txtrst)"
+	dd if=$(BIT_ELF_FILE) bs=1 skip=121 of=$@
 
-$(BIN_FILE) : $(BIT_FILE)
+.PHONY: bit_bin
+bit_bin : $(BIT_BIN_FILE)
+$(BIT_BIN_FILE) : $(BIT_FILE)
 	@echo "all:" > convert.bif
 	@echo "{" >> convert.bif
 	@echo "  $(BIT_FILE)" >> convert.bif
@@ -210,7 +225,6 @@ $(BIN_FILE) : $(BIT_FILE)
 
 .PHONY: bit_elf
 bit_elf: $(BIT_ELF_FILE)
-
 $(BIT_ELF_FILE): $(BIT_FILE) $(ELF_FILE)
 	@echo -e "$(txtylw)Update BIT with ELF software$(txtrst)"
 	updatemem -meminfo $(MMI_FILE) \
@@ -265,3 +279,4 @@ fix:
 	@echo -e "$(txtylw)Fix Flash U-Boot$(txtrst)"
 	sudo cp ../resources/zynq_qspi_x4_single.bin \
 		/opt/Xilinx/$(XILINX_SDK_TOOL)/$(TOOLS_VER)/data/xicom/cfgmem/uboot/
+
