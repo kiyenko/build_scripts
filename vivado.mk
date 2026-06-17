@@ -236,8 +236,8 @@ $(BIT_ELF_FILE): $(BIT_FILE) $(ELF_FILE)
 ################################################################################
 # Deploy
 ################################################################################
-.PHONY: upload
-update_boot: $(BOOT_FILE)
+.PHONY: upload_boot
+upload_boot: $(BOOT_FILE)
 	@echo -e "$(txtylw)Upload BOOT.bin$(txtrst)"
 	@scp $(SCP_OPTIONS) $(BOOT_FILE) $(SCP_PATH)
 
